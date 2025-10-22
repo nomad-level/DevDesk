@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - DevDesk{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    
+    <div class="card shadow mb-4">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">{{ post.title }}</h2>
+                    <small><i class="bi bi-clock"></i> Posted {{ post.date_created|timesince }} ago</small>
+                </div>
+                <div>
+                    {% if post.status == 'solved' %}
+                    <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Solved</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-circle"></i> Open</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="mb-3">
+                <span class="badge bg-primary category-badge me-2">
+                    <i class="bi bi-tag"></i> {{ post.get_category_display }}
+                </span>
+                <span class="badge bg-secondary category-badge">
+                    <i class="bi bi-person"></i> {{ post.assign }}
+                </span>
+            </div>
+            
+            <div class="mt-4">
+                <h5 class="text-muted mb-3">Description</h5>
+                <div class="border-start border-primary border-3 ps-3">
+                    <p style="white-space: pre-wrap;">{{ post.description }}</p>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-3 border-top">
+                <small class="text-muted">
+                    <i class="bi bi-envelope"></i> Contact: {{ post.email }}
+                </small>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">
+                <i class="bi bi-chat-dots"></i> Comments & Solutions 
+                <span class="badge bg-secondary">{{ comments.count }}</span>
+            </h3>
+            
+            
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-square"></i> Add Your Comment or Solution</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="bi bi-person"></i> Your Name (Optional)
+                            </label>
+                            {{ form.name }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.body.id_for_label }}" class="form-label fw-bold">
+                                <i class="bi bi-chat-text"></i> Comment *
+                            </label>
+                            {{ form.body }}
+                            <small class="form-text text-muted">
+                                Share your solution or ask a clarifying question. Be kind and specific. Emojis welcome! 😊
+                            </small>
+                            {% if form.body.errors %}
+                            <div class="text-danger small mt-1">{{ form.body.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">
+                                <i class="bi bi-image"></i> Attach Image or GIF (Optional)
+                            </label>
+                            {{ form.image }}
+                            <small class="form-text text-muted">
+                                Upload screenshots, diagrams, or GIFs to help explain your point.
+                            </small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Post Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Display Comments -->
+            {% if comments %}
+            <div class="comment-section">
+                {% for comment in comments %}
+                <div class="comment-item">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">
+                            <i class="bi bi-person-circle"></i> 
+                            <strong>{{ comment.name|default:"Anonymous" }}</strong>
+                        </h6>
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> {{ comment.date_created|timesince }} ago
+                        </small>
+                    </div>
+                    
+                    <p style="white-space: pre-wrap;">{{ comment.body }}</p>
+                    
+                    {% if comment.image %}
+                    <div class="mt-3">
+                        <img src="{{ comment.image.url }}" alt="Comment attachment" 
+                             class="img-fluid rounded shadow-sm" 
+                             style="max-width: 500px; max-height: 400px;">
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No comments yet. Be the first to help out!
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-4">
+        <a href="{% url 'post_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Back to All Posts
+        </a>
+    </div>
+</div>
+{% endblock %}
