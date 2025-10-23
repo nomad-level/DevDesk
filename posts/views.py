@@ -73,6 +73,25 @@ def post_create(request):
     return render(request, 'posts/post_create.html', context)
 
 
+def post_edit(request, pk):
+    """Edit an existing post"""
+    post = get_object_or_404(Post, pk=pk)
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your post has been updated successfully!')
+            return redirect('post_detail', pk=post.pk)
+    else:
+        form = PostForm(instance=post)
+
+    context = {
+        'form': form,
+        'post': post,
+    }
+    return render(request, 'posts/post_edit.html', context)
+
+
 def send_comment_notifications(post, comment):
     """Send an email notification when a new comment is added."""
     emails = set([post.email])
