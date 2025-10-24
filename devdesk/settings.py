@@ -95,9 +95,8 @@ if 'ON_HEROKU' in os.environ:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'devdesk',
-            # The value of 'NAME' should match the value of 'NAME' you replaced.
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
