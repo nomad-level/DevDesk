@@ -18,6 +18,7 @@
                     {% else %}
                     <span class="badge bg-warning text-dark fs-6"><i class="bi bi-exclamation-circle"></i> Open</span>
                     {% endif %}
+                    {% if is_owner %}
                     <a href="{% url 'post_edit' post.pk %}" class="btn btn-outline-light btn-sm">
                         <i class="bi bi-pencil-square"></i> Edit
                     </a>
@@ -27,6 +28,7 @@
                             <i class="bi bi-trash"></i> Delete
                         </button>
                     </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

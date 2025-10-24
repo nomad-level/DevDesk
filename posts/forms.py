@@ -5,7 +5,7 @@ from .models import Post, Comment
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'category', 'description', 'email', 'status']
+        fields = ['title', 'category', 'description', 'status']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -18,10 +18,6 @@ class PostForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 6,
                 'placeholder': 'Describe your issue in detail...'
-            }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'your.email@example.com'
             }),
             'status': forms.Select(attrs={
                 'class': 'form-select'

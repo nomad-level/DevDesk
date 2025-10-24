@@ -21,7 +21,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label"><i class="bi bi-funnel"></i> Filter by Category</label>
                     <select name="category" class="form-select" onchange="this.form.submit()">
                         <option value="">All Categories</option>
@@ -32,7 +32,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label"><i class="bi bi-toggles"></i> Filter by Status</label>
                     <select name="status" class="form-select" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
@@ -44,7 +44,14 @@
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <a href="{% url 'post_list' %}" class="btn btn-secondary w-100">
+                    {% if session_id %}
+                        <a href="?my_posts=1" class="btn btn-primary text-dark w-100 {% if show_my_posts %}active{% endif %}">
+                        <i class="bi bi-person-circle"></i> My Posts
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                        <a href="{% url 'post_list' %}" class="btn btn-warning text-dark w-100">
                         <i class="bi bi-x-circle"></i> Clear
                     </a>
                 </div>

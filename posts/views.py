@@ -4,10 +4,14 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
+import uuid
 
 
 def post_list(request):
     posts = Post.objects.all()
+    
+    # Get or create session ID
+    session_id = request.COOKIES.get('devdesk_session_id')
     
     # Filter by category
     category = request.GET.get('category')
@@ -19,12 +23,19 @@ def post_list(request):
     if status:
         posts = posts.filter(status=status)
     
+    # Filter by "my posts"
+    my_posts = request.GET.get('my_posts')
+    if my_posts and session_id:
+        posts = posts.filter(session_id=session_id)
+    
     context = {
         'posts': posts,
         'categories': Post.CATEGORY_CHOICES,
         'statuses': Post.STATUS_CHOICES,
         'selected_category': category,
         'selected_status': status,
+        'show_my_posts': my_posts,
+        'session_id': session_id,
     }
     return render(request, 'posts/post_list.html', context)
 
@@ -32,6 +43,10 @@ def post_list(request):
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
     comments = post.comments.all()
+    
+    # Get or create session ID
+    session_id = request.COOKIES.get('devdesk_session_id')
+    is_owner = (session_id and post.session_id == session_id)
     
     if request.method == 'POST':
         form = CommentForm(request.POST, request.FILES)
@@ -52,6 +67,7 @@ def post_detail(request, pk):
         'post': post,
         'comments': comments,
         'form': form,
+        'is_owner': is_owner,
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -61,9 +77,20 @@ def post_create(request):
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
-            post = form.save()
+            post = form.save(commit=False)
+            
+            # Get or create session ID
+            session_id = request.COOKIES.get('devdesk_session_id')
+            if not session_id:
+                session_id = str(uuid.uuid4())
+            
+            post.session_id = session_id
+            post.save()
+            
             messages.success(request, 'Your post has been created successfully!')
-            return redirect('post_detail', pk=post.pk)
+            response = redirect('post_detail', pk=post.pk)
+            response.set_cookie('devdesk_session_id', session_id, max_age=365*24*60*60)  # 1 year
+            return response
     else:
         form = PostForm()
     
@@ -76,6 +103,13 @@ def post_create(request):
 def post_edit(request, pk):
     """Edit an existing post"""
     post = get_object_or_404(Post, pk=pk)
+    
+    # Check if user owns this post
+    session_id = request.COOKIES.get('devdesk_session_id')
+    if not session_id or post.session_id != session_id:
+        messages.error(request, 'You can only edit your own posts!')
+        return redirect('post_detail', pk=post.pk)
+    
     if request.method == 'POST':
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
@@ -95,6 +129,13 @@ def post_edit(request, pk):
 def post_delete(request, pk):
     """Delete a post"""
     post = get_object_or_404(Post, pk=pk)
+    
+    # Check if user owns this post
+    session_id = request.COOKIES.get('devdesk_session_id')
+    if not session_id or post.session_id != session_id:
+        messages.error(request, 'You can only delete your own posts!')
+        return redirect('post_detail', pk=post.pk)
+    
     if request.method == 'POST':
         post.delete()
         messages.success(request, 'Post has been deleted successfully!')
