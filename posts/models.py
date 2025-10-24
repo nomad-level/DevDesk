@@ -41,6 +41,7 @@ class Post(models.Model):
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
     name = models.CharField(max_length=100, blank=True, null=True)
     body = models.TextField()
     image = models.ImageField(upload_to='comment_images/', blank=True, null=True)

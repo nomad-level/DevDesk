@@ -42,7 +42,8 @@ def post_list(request):
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    comments = post.comments.all()
+    # only top-level comments; replies are rendered under each parent
+    comments = post.comments.filter(parent__isnull=True)
     
     # Get or create session ID
     session_id = request.COOKIES.get('devdesk_session_id')
@@ -53,6 +54,14 @@ def post_detail(request, pk):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
+            # If replying to a comment, set parent
+            parent_id = request.POST.get('parent_id')
+            if parent_id:
+                try:
+                    parent_comment = post.comments.get(pk=parent_id)
+                    comment.parent = parent_comment
+                except Comment.DoesNotExist:
+                    pass
             comment.save()
             
             # Send email notifications
