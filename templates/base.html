@@ -79,22 +79,11 @@
             background-color: var(--bs-body-bg);
             border-left-color: var(--bs-primary);
         }
-        
-        /* Theme toggle button styling */
-        #theme-toggle {
-            border-color: rgba(255, 255, 255, 0.5);
-            color: rgba(255, 255, 255, 0.8);
-        }
-        #theme-toggle:hover {
-            border-color: rgba(255, 255, 255, 0.9);
-            color: rgba(255, 255, 255, 1);
-            background-color: rgba(255, 255, 255, 0.1);
-        }
     </style>
     
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body id="top">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'post_list' %}">
@@ -110,14 +99,9 @@
                             <i class="bi bi-house-door"></i> Home
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'post_create' %}">
-                            <i class="bi bi-plus-circle"></i> New Post
-                        </a>
-                    </li>
                     <li class="nav-item d-flex align-items-center ms-2">
-                        <button id="theme-toggle" class="btn btn-link text-white btn-sm" type="button" aria-label="Toggle theme">
-                            <i id="theme-toggle-icon" class="bi bi-moon-stars fs-5"></i>
+                        <button id="theme-toggle" class="btn btn-link p-0" style="color: white !important;" type="button" aria-label="Toggle theme">
+                            <i id="theme-toggle-icon" class="bi bi-moon-stars" style="font-size: 1rem; color: white !important;"></i>
                         </button>
                     </li>
                 </ul>
@@ -139,6 +123,14 @@
     <div class="content">
         {% block content %}{% endblock %}
     </div>
+
+    <footer class="py-2" style="background-color: #212529; margin-top: -19px;">
+        <div class="container text-center">
+            <a href="#top" class="text-white text-decoration-none" style="font-size: 2rem;">
+                <i class="bi bi-code-square"></i>
+            </a>
+        </div>
+    </footer>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
