@@ -79,6 +79,17 @@
             background-color: var(--bs-body-bg);
             border-left-color: var(--bs-primary);
         }
+        
+        /* Theme toggle button styling */
+        #theme-toggle {
+            border-color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        #theme-toggle:hover {
+            border-color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -105,8 +116,8 @@
                         </a>
                     </li>
                     <li class="nav-item d-flex align-items-center ms-2">
-                        <button id="theme-toggle" class="btn btn-outline-light btn-sm" type="button" aria-label="Toggle theme">
-                            <i id="theme-toggle-icon" class="bi bi-moon-stars"></i>
+                        <button id="theme-toggle" class="btn btn-link text-white btn-sm" type="button" aria-label="Toggle theme">
+                            <i id="theme-toggle-icon" class="bi bi-moon-stars fs-5"></i>
                         </button>
                     </li>
                 </ul>
