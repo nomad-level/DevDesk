@@ -9,9 +9,13 @@ import uuid
 
 def post_list(request):
     posts = Post.objects.all()
-    
-    # Get or create session ID
+
+    # Get or create session ID so the "My Posts" button is always available
     session_id = request.COOKIES.get('devdesk_session_id')
+    new_session_id = None
+    if not session_id:
+        new_session_id = str(uuid.uuid4())
+        session_id = new_session_id
     
     # Filter by category
     category = request.GET.get('category')
@@ -37,7 +41,11 @@ def post_list(request):
         'show_my_posts': my_posts,
         'session_id': session_id,
     }
-    return render(request, 'posts/post_list.html', context)
+    response = render(request, 'posts/post_list.html', context)
+    if new_session_id:
+        # Persist for 1 year so users can keep managing their posts
+        response.set_cookie('devdesk_session_id', new_session_id, max_age=365*24*60*60)
+    return response
 
 
 def post_detail(request, pk):
