@@ -92,6 +92,26 @@ def post_edit(request, pk):
     return render(request, 'posts/post_edit.html', context)
 
 
+def post_delete(request, pk):
+    """Delete a post"""
+    post = get_object_or_404(Post, pk=pk)
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request, 'Post has been deleted successfully!')
+        return redirect('post_list')
+    return redirect('post_detail', pk=pk)
+
+
+def comment_delete(request, pk):
+    """Delete a comment"""
+    comment = get_object_or_404(Comment, pk=pk)
+    post_pk = comment.post.pk
+    if request.method == 'POST':
+        comment.delete()
+        messages.success(request, 'Comment has been deleted successfully!')
+    return redirect('post_detail', pk=post_pk)
+
+
 def send_comment_notifications(post, comment):
     """Send an email notification when a new comment is added."""
     emails = set([post.email])
