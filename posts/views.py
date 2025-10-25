@@ -8,26 +8,25 @@ import uuid
 
 
 def post_list(request):
+    """Display list of all posts with optional filtering."""
     posts = Post.objects.all()
 
-    # Get or create session ID so the "My Posts" button is always available
+    # Get or create session ID for "My Posts" functionality
     session_id = request.COOKIES.get('devdesk_session_id')
     new_session_id = None
     if not session_id:
         new_session_id = str(uuid.uuid4())
         session_id = new_session_id
     
-    # Filter by category
+    # Apply filters
     category = request.GET.get('category')
     if category:
         posts = posts.filter(category=category)
     
-    # Filter by status
     status = request.GET.get('status')
     if status:
         posts = posts.filter(status=status)
     
-    # Filter by "my posts"
     my_posts = request.GET.get('my_posts')
     if my_posts and session_id:
         posts = posts.filter(session_id=session_id)
@@ -41,19 +40,18 @@ def post_list(request):
         'show_my_posts': my_posts,
         'session_id': session_id,
     }
+    
     response = render(request, 'posts/post_list.html', context)
     if new_session_id:
-        # Persist for 1 year so users can keep managing their posts
         response.set_cookie('devdesk_session_id', new_session_id, max_age=365*24*60*60)
     return response
 
 
 def post_detail(request, pk):
+    """Display a single post with its comments and replies."""
     post = get_object_or_404(Post, pk=pk)
-    # only top-level comments; replies are rendered under each parent
     comments = post.comments.filter(parent__isnull=True)
     
-    # Get or create session ID
     session_id = request.COOKIES.get('devdesk_session_id')
     is_owner = (session_id and post.session_id == session_id)
     
@@ -62,7 +60,8 @@ def post_detail(request, pk):
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
-            # If replying to a comment, set parent
+            
+            # Handle replies
             parent_id = request.POST.get('parent_id')
             if parent_id:
                 try:
@@ -70,11 +69,9 @@ def post_detail(request, pk):
                     comment.parent = parent_comment
                 except Comment.DoesNotExist:
                     pass
+            
             comment.save()
-            
-            # Send email notifications
             send_comment_notifications(post, comment)
-            
             messages.success(request, 'Your comment has been posted!')
             return redirect('post_detail', pk=post.pk)
     else:
@@ -90,13 +87,12 @@ def post_detail(request, pk):
 
 
 def post_create(request):
-    """Create a new post"""
+    """Create a new post."""
     if request.method == 'POST':
         form = PostForm(request.POST)
         if form.is_valid():
             post = form.save(commit=False)
             
-            # Get or create session ID
             session_id = request.COOKIES.get('devdesk_session_id')
             if not session_id:
                 session_id = str(uuid.uuid4())
@@ -106,22 +102,18 @@ def post_create(request):
             
             messages.success(request, 'Your post has been created successfully!')
             response = redirect('post_detail', pk=post.pk)
-            response.set_cookie('devdesk_session_id', session_id, max_age=365*24*60*60)  # 1 year
+            response.set_cookie('devdesk_session_id', session_id, max_age=365*24*60*60)
             return response
     else:
         form = PostForm()
     
-    context = {
-        'form': form,
-    }
-    return render(request, 'posts/post_create.html', context)
+    return render(request, 'posts/post_create.html', {'form': form})
 
 
 def post_edit(request, pk):
-    """Edit an existing post"""
+    """Edit an existing post."""
     post = get_object_or_404(Post, pk=pk)
     
-    # Check if user owns this post
     session_id = request.COOKIES.get('devdesk_session_id')
     if not session_id or post.session_id != session_id:
         messages.error(request, 'You can only edit your own posts!')
@@ -136,18 +128,13 @@ def post_edit(request, pk):
     else:
         form = PostForm(instance=post)
 
-    context = {
-        'form': form,
-        'post': post,
-    }
-    return render(request, 'posts/post_edit.html', context)
+    return render(request, 'posts/post_edit.html', {'form': form, 'post': post})
 
 
 def post_delete(request, pk):
-    """Delete a post"""
+    """Delete a post."""
     post = get_object_or_404(Post, pk=pk)
     
-    # Check if user owns this post
     session_id = request.COOKIES.get('devdesk_session_id')
     if not session_id or post.session_id != session_id:
         messages.error(request, 'You can only delete your own posts!')
@@ -157,29 +144,29 @@ def post_delete(request, pk):
         post.delete()
         messages.success(request, 'Post has been deleted successfully!')
         return redirect('post_list')
+    
     return redirect('post_detail', pk=pk)
 
 
 def comment_delete(request, pk):
-    """Delete a comment"""
+    """Delete a comment."""
     comment = get_object_or_404(Comment, pk=pk)
     post_pk = comment.post.pk
+    
     if request.method == 'POST':
         comment.delete()
         messages.success(request, 'Comment has been deleted successfully!')
+    
     return redirect('post_detail', pk=post_pk)
 
 
 def send_comment_notifications(post, comment):
     """Send an email notification when a new comment is added."""
-    emails = set([post.email])
+    if not post.email:
+        return
     
-    for prev_comment in post.comments.exclude(pk=comment.pk):
-        pass
-    
-    if emails:
-        subject = f'New comment on: {post.title}'
-        message = f'''
+    subject = f'New comment on: {post.title}'
+    message = f'''
 Hello,
 
 A new comment has been added to the post "{post.title}".
@@ -191,16 +178,17 @@ View the full discussion at: http://localhost:8000/post/{post.pk}/
 
 ---
 DevDesk - Developer Issue Tracker
-        '''
-        
-        try:
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                list(emails),
-                fail_silently=True,
-            )
-        except Exception as e:
-            print(f"Error sending email: {e}")
+    '''
+    
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [post.email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
 

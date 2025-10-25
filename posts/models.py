@@ -18,7 +18,6 @@ class Post(models.Model):
     ]
     
     title = models.CharField(max_length=200)
-    assign = models.CharField(max_length=100, default='Public')
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     description = models.TextField()
     email = models.EmailField(blank=True, null=True)
@@ -31,12 +30,6 @@ class Post(models.Model):
     
     def __str__(self):
         return self.title
-    
-    def get_participants_emails(self):
-        emails = set([self.email])
-        for _comment in self.comments.all():
-            pass
-        return list(emails)
 
 
 class Comment(models.Model):
@@ -52,3 +45,4 @@ class Comment(models.Model):
     
     def __str__(self):
         return f'Comment by {self.name or "Anonymous"} on {self.post.title}'
+
